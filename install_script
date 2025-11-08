@@ -16,7 +16,7 @@ sudo pacman -Syu --noconfirm
 
 # --- Step 2: Install essential packages ---
 echo "2/10: Installing essential packages..."
-sudo pacman -S --noconfirm hyprland kitty rofi grim slurp wlogout git base-devel zsh
+sudo pacman -S --noconfirm hyprland kitty rofi grim slurp git base-devel zsh
 
 # --- Step 3: Install yay if not installed ---
 echo "3/10: Installing yay (AUR helper)..."
@@ -32,7 +32,7 @@ fi
 
 # --- Step 4: Install AUR packages ---
 echo "4/10: Installing AUR packages..."
-yay -S --noconfirm librewolf-bin nwg-look swww waybar udiskie python-pywal16 matugen-bin hypridle hyprlock kvantum kvantum-qt5
+yay -S --noconfirm librewolf-bin nwg-look swww waybar udiskie wlogout python-pywal16 matugen-bin hypridle hyprlock kvantum kvantum-qt5
 
 # --- Step 5: Clone dotfiles ---
 echo "5/10: Cloning dotfiles..."
@@ -44,14 +44,23 @@ else
 fi
 
 # --- Step 6: Copy configs ---
-echo "6/10: Copying config files..."
 mkdir -p "$HOME/.config"
-cp -r "$DOTFILES_DIR/.config/hypr" "$HOME/.config/" || true
-cp -r "$DOTFILES_DIR/.config/kitty" "$HOME/.config/" || true
-cp -r "$DOTFILES_DIR/.config/rofi" "$HOME/.config/" || true
-cp -r "$DOTFILES_DIR/.config/waybar" "$HOME/.config/" || true
-cp -r "$DOTFILES_DIR/.config/swww" "$HOME/.config/" || true
-cp -r "$DOTFILES_DIR/.zshrc" "$HOME/" || true
+
+copy_if_exists() {
+    if [ -d "$DOTFILES_DIR/.config/$1" ]; then
+        echo "Copying $1 config..."
+        cp -r "$DOTFILES_DIR/.config/$1" "$HOME/.config/"
+    else
+        echo "Skipping $1 (no directory in dotfiles)"
+    fi
+}
+
+copy_if_exists hypr
+copy_if_exists kitty
+copy_if_exists rofi
+copy_if_exists waybar
+copy_if_exists wlogout
+copy_if_exists swaync
 
 # --- Step 7: Zsh & Oh-My-Zsh ---
 echo "7/10: Installing Oh-My-Zsh..."
