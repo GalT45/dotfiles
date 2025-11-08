@@ -1,108 +1,84 @@
--------THE WHOLE INSTALLATION PROCESS---------
-#install hyprland and kitty 
+#!/bin/bash
 
-	sudo pacman -S hyprland kitty
+set -euo pipefail
+echo "Starting automated Hyprland setup..."
 
-#install some fonts if needed
+# --- Variables ---
+DOTFILES_REPO="https://github.com/GalT45/dotfiles.git"
+DOTFILES_DIR="$HOME/dotfiles"
+WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
+WALLPAPER_IMAGE="$WALLPAPER_DIR/default.jpg"
 
-	---etc
+# --- Update system and install essential packages ---
+sudo pacman -Syu --noconfirm
+sudo pacman -S --noconfirm hyprland kitty rofi grim slurp wlogout git base-devel
 
-#launch Hyprland
-
-	Hyprland
-#Change the language and the scale, also remove the auto generated warning
-#Install the zsh shell
-	sudo pacamn -S zsh
-#Change the shell to zsh
-	chsh -s /usr/bin/zsh
-#Need to reboot to apply the changes
-#Install yay
-	git clone https://...
-#Install wofi
-	sudo pacman -S rofi
-#Install librewolf browser
-	sudo pacman -S firefox
-#Login with mozzila account
-
-#Copy from autostrat x at login to ~/.zprofile  
-if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
-  exec startx
+# --- Install yay (AUR helper) if not installed ---
+if ! command -v yay &> /dev/null; then
+    git clone https://aur.archlinux.org/yay.git /tmp/yay
+    cd /tmp/yay
+    makepkg -si --noconfirm
+    cd
+    rm -rf /tmp/yay
 fi
-#Install required packages for ricing
-yay -S --needed swaync pipewire xdg-desktop-portal-hyprland polkit-gnome qt5-wayland qt6-wayland nwg-look swww waybar udiskie python-pywal16 matugen-bin hypridle hyprlock
-#Setup a minimalist Wallpaper
-#Create a wallpaper directory inside pictures
-#Autostart the sww-daemon in hyprland.conf
-#Set the wallpaper with swww
-	swww-daemon & disown
-	swww img path_to_image
-#Autostart waybar in hyprland.conf
-#Also start it in the background
-	waybar & disown
-#Set the graphite gtk theme
-	git clone https://github.com/vinceliuice/Graphite-gtk-theme.git
-	cd Graphite-gtk-theme
-	./install.sh -l --tweaks nord rimless normal
-	cd
-	rm -rf Graphite-gtk-theme
-#Set the gtk theme using nwglook (i think)
-#Install kvantum
-	yay -S kvantum kvantum-qt5
-#Set the qt/kde theme
-	git clone https://github.com/vinceliuice/Graphite-kde-theme.git
-	./install.sh --rimless
-	cd
-	rm -rf Graphite-kde-theme
-#Set the theme in kvantum to NordDarkRimless
-#Change the terminal prompt in zsh
-	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-#Install the zsh plugins
-	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-#Set the plugin in .zshrc
-#Decoration in Hyprland
-#Chnage the gaps_in to 7 and gaps_out = 15 and border_size to 1
-#Change the col.active_border = rgb(e8eaed)
-#Change the rounding to 15
-#Change the rounding_power to 2
-#Chnage the inactive_opacity to 0.8
-#Change the range for shadow to 13 and the render_power to 3 and color to rgba(121212ee)
-#Change the blur size to 15 and the passes to 2 and vibrancy as 0.5 and vibrancy_darkness to 0.2
-#Extras: popin to 95% on both also chahge the fade to slidefade for all three workspace animations and add 10%
 
-#Kitty config change
-font_family     MesloLGS Nerd Font Mono
-font_size       11
+# --- Install AUR packages ---
+yay -S --noconfirm librewolf-bin nwg-look swww waybar udiskie python-pywal16 matugen-bin hypridle hyprlock kvantum kvantum-qt5
 
-disable_ligatures never
-enable_audio_bell no
+# --- Clone public dotfiles ---
+if [ ! -d "$DOTFILES_DIR" ]; then
+    git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+fi
 
-shell zsh
-shell_integration no-cursor
+echo "Copying dotfiles..."
+cp -r "$DOTFILES_DIR/.config/hypr" "$HOME/.config/"
+cp -r "$DOTFILES_DIR/.config/kitty" "$HOME/.config/"
+cp -r "$DOTFILES_DIR/.config/rofi" "$HOME/.config/"
+cp -r "$DOTFILES_DIR/.config/waybar" "$HOME/.config/"
+cp -r "$DOTFILES_DIR/.config/swww" "$HOME/.config/"
+cp -r "$DOTFILES_DIR/.zshrc" "$HOME/"
 
-cursor_shape    block
+# --- Install and configure Zsh & Oh-My-Zsh ---
+sudo pacman -S --noconfirm zsh
+chsh -s /usr/bin/zsh
 
-url_color #e8eaed
-url_style curly
+if [ ! -d "$HOME/.oh-my-zsh" ]; then
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+fi
 
-remember_window_size no
-#initial_window_width 640
-#initial_window_height 400
-initial_window_width  78c
-initial_window_height 23c
-window_padding_width  25
-cursor_blink_interval 0
+# Install zsh syntax highlighting plugin
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 
-background_opacity 0.80
-confirm_os_window_close 0
-#Waybar:
-#Copy the minimal confgi from alexys github and change it 
-#Setup the launch.sh bash script in scripts directory to restart waybar
-	#!/bin/bash 
-	killall -9 waybar 
-	waybar &
-#Install power-profiles-daemon
-	sudo pacman -S power-profiles-daemon
-	sudo systemctl start power-profiles-daemon
-	sudo systemctl enable power-profiles-daemon
-#Install
-wlogout, grim, yay -S selectdefaultapplication-git 
+# --- Setup GTK and Kvantum themes ---
+git clone https://github.com/vinceliuice/Graphite-gtk-theme.git /tmp/Graphite-gtk-theme
+cd /tmp/Graphite-gtk-theme
+./install.sh -l --tweaks nord rimless normal
+cd
+rm -rf /tmp/Graphite-gtk-theme
+
+git clone https://github.com/vinceliuice/Graphite-kde-theme.git /tmp/Graphite-kde-theme
+cd /tmp/Graphite-kde-theme
+./install.sh --rimless
+cd
+rm -rf /tmp/Graphite-kde-theme
+
+# --- Wallpaper setup ---
+mkdir -p "$WALLPAPER_DIR"
+if [ ! -f "$WALLPAPER_IMAGE" ]; then
+    cp "$DOTFILES_DIR/wallpapers/default.jpg" "$WALLPAPER_IMAGE"
+fi
+
+# Start swww daemon and set wallpaper
+swww-daemon & disown
+swww img "$WALLPAPER_IMAGE"
+
+# --- Start Waybar ---
+waybar & disown
+
+# --- Install power-profiles-daemon ---
+sudo pacman -S --noconfirm power-profiles-daemon
+sudo systemctl enable --now power-profiles-daemon
+
+# --- Launch Hyprland ---
+echo "Setup complete! You can now launch Hyprland with the command: Hyprland"
+
