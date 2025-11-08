@@ -1,0 +1,108 @@
+-------THE WHOLE INSTALLATION PROCESS---------
+#install hyprland and kitty 
+
+	sudo pacman -S hyprland kitty
+
+#install some fonts if needed
+
+	---etc
+
+#launch Hyprland
+
+	Hyprland
+#Change the language and the scale, also remove the auto generated warning
+#Install the zsh shell
+	sudo pacamn -S zsh
+#Change the shell to zsh
+	chsh -s /usr/bin/zsh
+#Need to reboot to apply the changes
+#Install yay
+	git clone https://...
+#Install wofi
+	sudo pacman -S rofi
+#Install librewolf browser
+	sudo pacman -S firefox
+#Login with mozzila account
+
+#Copy from autostrat x at login to ~/.zprofile  
+if [ -z "$DISPLAY" ] && [ "$XDG_VTNR" = 1 ]; then
+  exec startx
+fi
+#Install required packages for ricing
+yay -S --needed swaync pipewire xdg-desktop-portal-hyprland polkit-gnome qt5-wayland qt6-wayland nwg-look swww waybar udiskie python-pywal16 matugen-bin hypridle hyprlock
+#Setup a minimalist Wallpaper
+#Create a wallpaper directory inside pictures
+#Autostart the sww-daemon in hyprland.conf
+#Set the wallpaper with swww
+	swww-daemon & disown
+	swww img path_to_image
+#Autostart waybar in hyprland.conf
+#Also start it in the background
+	waybar & disown
+#Set the graphite gtk theme
+	git clone https://github.com/vinceliuice/Graphite-gtk-theme.git
+	cd Graphite-gtk-theme
+	./install.sh -l --tweaks nord rimless normal
+	cd
+	rm -rf Graphite-gtk-theme
+#Set the gtk theme using nwglook (i think)
+#Install kvantum
+	yay -S kvantum kvantum-qt5
+#Set the qt/kde theme
+	git clone https://github.com/vinceliuice/Graphite-kde-theme.git
+	./install.sh --rimless
+	cd
+	rm -rf Graphite-kde-theme
+#Set the theme in kvantum to NordDarkRimless
+#Change the terminal prompt in zsh
+	sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+#Install the zsh plugins
+	git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+#Set the plugin in .zshrc
+#Decoration in Hyprland
+#Chnage the gaps_in to 7 and gaps_out = 15 and border_size to 1
+#Change the col.active_border = rgb(e8eaed)
+#Change the rounding to 15
+#Change the rounding_power to 2
+#Chnage the inactive_opacity to 0.8
+#Change the range for shadow to 13 and the render_power to 3 and color to rgba(121212ee)
+#Change the blur size to 15 and the passes to 2 and vibrancy as 0.5 and vibrancy_darkness to 0.2
+#Extras: popin to 95% on both also chahge the fade to slidefade for all three workspace animations and add 10%
+
+#Kitty config change
+font_family     MesloLGS Nerd Font Mono
+font_size       11
+
+disable_ligatures never
+enable_audio_bell no
+
+shell zsh
+shell_integration no-cursor
+
+cursor_shape    block
+
+url_color #e8eaed
+url_style curly
+
+remember_window_size no
+#initial_window_width 640
+#initial_window_height 400
+initial_window_width  78c
+initial_window_height 23c
+window_padding_width  25
+cursor_blink_interval 0
+
+background_opacity 0.80
+confirm_os_window_close 0
+#Waybar:
+#Copy the minimal confgi from alexys github and change it 
+#Setup the launch.sh bash script in scripts directory to restart waybar
+	#!/bin/bash 
+	killall -9 waybar 
+	waybar &
+#Install power-profiles-daemon
+	sudo pacman -S power-profiles-daemon
+	sudo systemctl start power-profiles-daemon
+	sudo systemctl enable power-profiles-daemon
+#Install
+wlogout, grim, yay -S selectdefaultapplication-git 
