@@ -1,7 +1,8 @@
 #!/bin/bash
 
 set -euo pipefail
-echo "Starting automated Hyprland setup..."
+
+echo "=== Starting automated Hyprland setup ==="
 
 # --- Variables ---
 DOTFILES_REPO="https://github.com/GalT45/dotfiles.git"
@@ -9,47 +10,59 @@ DOTFILES_DIR="$HOME/dotfiles"
 WALLPAPER_DIR="$HOME/Pictures/Wallpapers"
 WALLPAPER_IMAGE="$WALLPAPER_DIR/default.jpg"
 
-# --- Update system and install essential packages ---
+# --- Step 1: Update system ---
+echo "1/10: Updating system..."
 sudo pacman -Syu --noconfirm
-sudo pacman -S --noconfirm hyprland kitty rofi grim slurp wlogout git base-devel
 
-# --- Install yay (AUR helper) if not installed ---
+# --- Step 2: Install essential packages ---
+echo "2/10: Installing essential packages..."
+sudo pacman -S --noconfirm hyprland kitty rofi grim slurp wlogout git base-devel zsh
+
+# --- Step 3: Install yay if not installed ---
+echo "3/10: Installing yay (AUR helper)..."
 if ! command -v yay &> /dev/null; then
     git clone https://aur.archlinux.org/yay.git /tmp/yay
     cd /tmp/yay
     makepkg -si --noconfirm
     cd
     rm -rf /tmp/yay
+else
+    echo "yay already installed"
 fi
 
-# --- Install AUR packages ---
+# --- Step 4: Install AUR packages ---
+echo "4/10: Installing AUR packages..."
 yay -S --noconfirm librewolf-bin nwg-look swww waybar udiskie python-pywal16 matugen-bin hypridle hyprlock kvantum kvantum-qt5
 
-# --- Clone public dotfiles ---
+# --- Step 5: Clone dotfiles ---
+echo "5/10: Cloning dotfiles..."
 if [ ! -d "$DOTFILES_DIR" ]; then
     git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+else
+    echo "Dotfiles directory already exists, pulling latest..."
+    cd "$DOTFILES_DIR" && git pull
 fi
 
-echo "Copying dotfiles..."
-cp -r "$DOTFILES_DIR/.config/hypr" "$HOME/.config/"
-cp -r "$DOTFILES_DIR/.config/kitty" "$HOME/.config/"
-cp -r "$DOTFILES_DIR/.config/rofi" "$HOME/.config/"
-cp -r "$DOTFILES_DIR/.config/waybar" "$HOME/.config/"
-cp -r "$DOTFILES_DIR/.config/swww" "$HOME/.config/"
-cp -r "$DOTFILES_DIR/.zshrc" "$HOME/"
+# --- Step 6: Copy configs ---
+echo "6/10: Copying config files..."
+mkdir -p "$HOME/.config"
+cp -r "$DOTFILES_DIR/.config/hypr" "$HOME/.config/" || true
+cp -r "$DOTFILES_DIR/.config/kitty" "$HOME/.config/" || true
+cp -r "$DOTFILES_DIR/.config/rofi" "$HOME/.config/" || true
+cp -r "$DOTFILES_DIR/.config/waybar" "$HOME/.config/" || true
+cp -r "$DOTFILES_DIR/.config/swww" "$HOME/.config/" || true
+cp -r "$DOTFILES_DIR/.zshrc" "$HOME/" || true
 
-# --- Install and configure Zsh & Oh-My-Zsh ---
-sudo pacman -S --noconfirm zsh
-chsh -s /usr/bin/zsh
-
+# --- Step 7: Zsh & Oh-My-Zsh ---
+echo "7/10: Installing Oh-My-Zsh..."
+chsh -s /usr/bin/zsh || true
 if [ ! -d "$HOME/.oh-my-zsh" ]; then
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
 fi
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting || true
 
-# Install zsh syntax highlighting plugin
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
-
-# --- Setup GTK and Kvantum themes ---
+# --- Step 8: GTK & Kvantum themes ---
+echo "8/10: Installing Graphite GTK & Kvantum themes..."
 git clone https://github.com/vinceliuice/Graphite-gtk-theme.git /tmp/Graphite-gtk-theme
 cd /tmp/Graphite-gtk-theme
 ./install.sh -l --tweaks nord rimless normal
@@ -62,23 +75,20 @@ cd /tmp/Graphite-kde-theme
 cd
 rm -rf /tmp/Graphite-kde-theme
 
-# --- Wallpaper setup ---
+# --- Step 9: Wallpaper setup ---
+echo "9/10: Setting up wallpaper..."
 mkdir -p "$WALLPAPER_DIR"
 if [ ! -f "$WALLPAPER_IMAGE" ]; then
-    cp "$DOTFILES_DIR/wallpapers/default.jpg" "$WALLPAPER_IMAGE"
+    cp "$DOTFILES_DIR/wallpapers/default.jpg" "$WALLPAPER_IMAGE" || true
 fi
-
-# Start swww daemon and set wallpaper
 swww-daemon & disown
 swww img "$WALLPAPER_IMAGE"
 
-# --- Start Waybar ---
+# --- Step 10: Start Waybar & power profiles ---
+echo "10/10: Starting Waybar and power-profiles-daemon..."
 waybar & disown
-
-# --- Install power-profiles-daemon ---
 sudo pacman -S --noconfirm power-profiles-daemon
 sudo systemctl enable --now power-profiles-daemon
 
-# --- Launch Hyprland ---
-echo "Setup complete! You can now launch Hyprland with the command: Hyprland"
+echo "=== Setup complete! You can now launch Hyprland with: Hyprland ==="
 
